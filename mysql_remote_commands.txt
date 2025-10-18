@@ -1,0 +1,49 @@
+# MySQL远程连接配置 - 终端逐条输入命令
+
+# 步骤1: 备份MySQL配置文件
+# 先检查是否有sudo权限
+whoami
+# 备份配置文件
+sudo cp /etc/mysql/mysql.conf.d/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf.bak
+# 验证备份是否成功
+ls -l /etc/mysql/mysql.conf.d/
+
+# 步骤2: 修改MySQL配置文件
+# 查看当前bind-address设置
+grep 'bind-address' /etc/mysql/mysql.conf.d/mysqld.cnf
+# 修改bind-address为0.0.0.0
+sudo sed -i 's/bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
+# 验证修改是否成功
+grep 'bind-address' /etc/mysql/mysql.conf.d/mysqld.cnf
+
+# 步骤3: 重启MySQL服务
+# 重启服务
+sudo systemctl restart mysql
+# 检查服务状态
+sudo systemctl status mysql
+
+# 步骤4: 授权root用户远程访问
+# 登录MySQL（输入密码后执行以下命令）
+mysql -u root -p
+# 授予远程访问权限（在MySQL命令行中执行）
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'your_password_here' WITH GRANT OPTION;
+# 刷新权限
+FLUSH PRIVILEGES;
+# 退出MySQL命令行
+EXIT;
+
+# 步骤5: 配置防火墙开放3306端口
+# 开放3306端口
+sudo ufw allow 3306
+sudo ufw reload
+# 检查防火墙状态
+sudo ufw status
+
+# 验证配置
+# 查看MySQL监听地址
+netstat -tuln | grep 3306
+
+# 重要提示:
+# 1. 请将'your_password_here'替换为您的实际MySQL root密码
+# 2. 对于生产环境，建议限制允许访问的IP地址范围，例如使用'root'@'192.168.1.%'而非'root'@'%'
+# 3. 完成配置后，您可以从远程使用服务器IP地址连接MySQL数据库
